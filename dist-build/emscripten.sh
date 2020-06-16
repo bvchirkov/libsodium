@@ -66,7 +66,7 @@ echo
 emconfigure ./configure $CONFIG_EXTRA --disable-shared --prefix="$PREFIX" \
                         --without-pthreads \
                         --disable-ssp --disable-asm --disable-pie \
-                        "$LIBDIR" "$INCLUDEDIR"
+                        --libdir="$LIBDIR" --includedir="$INCLUDEDIR"
                         CFLAGS="$CFLAGS" && \
 emmake make clean
 [ $? = 0 ] || exit 1
