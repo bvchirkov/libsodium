@@ -21,10 +21,12 @@ echo
 if [ "x$1" = "x--standard" ]; then
   export EXPORTED_FUNCTIONS="$EXPORTED_FUNCTIONS_STANDARD"
   export LDFLAGS="${LDFLAGS} ${LDFLAGS_DIST} -s TOTAL_MEMORY=${MAX_MEMORY}"
-  export PREFIX="$(pwd)/libsodium-js"
   export DONE_FILE="$(pwd)/js.done"
   export CONFIG_EXTRA="--enable-minimal"
   export DIST='yes'
+  export LIBDIR="$2"
+  export INCLUDEDIR="$3"
+  export PREFIX="$LIBDIR"
   echo "Building a standard distribution in [${PREFIX}]"
 elif [ "x$1" = "x--sumo" ]; then
   export EXPORTED_FUNCTIONS="$EXPORTED_FUNCTIONS_SUMO"
@@ -65,6 +67,7 @@ echo
 emconfigure ./configure $CONFIG_EXTRA --disable-shared --prefix="$PREFIX" \
                         --without-pthreads \
                         --disable-ssp --disable-asm --disable-pie \
+						--libdir="$LIBDIR" --includedir="$INCLUDEDIR" \
                         CFLAGS="$CFLAGS" && \
 emmake make clean
 [ $? = 0 ] || exit 1
