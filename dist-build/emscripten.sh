@@ -25,6 +25,9 @@ if [ "x$1" = "x--standard" ]; then
   export DONE_FILE="$(pwd)/js.done"
   export CONFIG_EXTRA="--enable-minimal"
   export DIST='yes'
+  export LIBDIR="$2"
+  export INCLUDEDIR="$3"
+  export PREFIX="$LIBDIR"
   echo "Building a standard distribution in [${PREFIX}]"
 elif [ "x$1" = "x--sumo" ]; then
   export EXPORTED_FUNCTIONS="$EXPORTED_FUNCTIONS_SUMO"
@@ -65,6 +68,7 @@ echo
 emconfigure ./configure $CONFIG_EXTRA --disable-shared --prefix="$PREFIX" \
                         --without-pthreads \
                         --disable-ssp --disable-asm --disable-pie \
+						--libdir="$LIBDIR" --includedir="$INCLUDEDIR" \
                         CFLAGS="$CFLAGS" && \
 emmake make clean
 [ $? = 0 ] || exit 1
@@ -74,13 +78,13 @@ if [ "$DIST" = yes ]; then
     outFile="${1}"
     shift
     emcc "$CFLAGS" --llvm-lto 1 $CPPFLAGS $LDFLAGS $JS_EXPORTS_FLAGS ${@} \
-      "${PREFIX}/lib/libsodium.a" -o "${outFile}" || exit 1
+      "${PREFIX}/libsodium.a" -o "${outFile}" || exit 1
   }
   emmake make $MAKE_FLAGS install || exit 1
-  emccLibsodium "${PREFIX}/lib/libsodium.asm.tmp.js" -Oz -s WASM=0 -s RUNNING_JS_OPTS=1
-  emccLibsodium "${PREFIX}/lib/libsodium.wasm.tmp.js" -O3 -s WASM=1
+  emccLibsodium "${PREFIX}/libsodium.asm.tmp.js" -Oz -s WASM=0 -s RUNNING_JS_OPTS=1
+  emccLibsodium "${PREFIX}/libsodium.wasm.tmp.js" -O3 -s WASM=1
 
-  cat > "${PREFIX}/lib/libsodium.js" <<- EOM
+  cat > "${PREFIX}/libsodium.js" <<- EOM
     var Module;
     if (typeof Module === 'undefined') {
       Module = {};
@@ -132,18 +136,18 @@ if [ "$DIST" = yes ]; then
             resolve();
           };
 
-          $(cat "${PREFIX}/lib/libsodium.asm.tmp.js" | sed 's|use asm||g')
+          $(cat "${PREFIX}/libsodium.asm.tmp.js" | sed 's|use asm||g')
         });
       };
-      $(cat "${PREFIX}/lib/libsodium.wasm.tmp.js")
+      $(cat "${PREFIX}/libsodium.wasm.tmp.js")
     }).catch(function() {
       return _Module.useBackupModule();
     });
 EOM
 
-  rm "${PREFIX}/lib/libsodium.asm.tmp.js" "${PREFIX}/lib/libsodium.wasm.tmp.js"
-  touch -r "${PREFIX}/lib/libsodium.js" "$DONE_FILE"
-  ls -l "${PREFIX}/lib/libsodium.js"
+  rm "${PREFIX}/libsodium.asm.tmp.js" "${PREFIX}/libsodium.wasm.tmp.js"
+  touch -r "${PREFIX}/libsodium.js" "$DONE_FILE"
+  ls -l "${PREFIX}/libsodium.js"
   exit 0
 fi
 
